@@ -1,22 +1,30 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
+
+// Load env vars
+dotenv.config();
 const connectDB = require('./config/db');
 const path = require('path');
 const http = require('http');
 const { Server } = require('socket.io');
 
-// Load env vars
-dotenv.config();
-
-// Connect to database
-connectDB();
-
 // Check for required environment variables
-if (!process.env.FRONTEND_URL) {
-  console.error('FATAL ERROR: FRONTEND_URL is not defined in .env file');
-  process.exit(1);
-}
+const requiredEnvVars = ['MONGO_URI', 'JWT_SECRET', 'FRONTEND_URL'];
+requiredEnvVars.forEach(v => {
+  if (!process.env[v]) {
+    console.error(`FATAL ERROR: ${v} is not defined in environment variables`);
+    if (process.env.NODE_ENV !== 'production') {
+       // Only exit in dev to help developer notice, in production let it try to run or report via logs
+       process.exit(1); 
+    }
+  }
+});
+
+// Connect to database with catch
+connectDB().catch(err => {
+  console.error('Database pre-connection failed:', err.message);
+});
 
 const FRONTEND_ORIGINS = [
   process.env.FRONTEND_URL,
