@@ -12,21 +12,46 @@ dotenv.config();
 // Connect to database
 connectDB();
 
+// Check for required environment variables
+if (!process.env.FRONTEND_URL) {
+  console.error('FATAL ERROR: FRONTEND_URL is not defined in .env file');
+  process.exit(1);
+}
+
+const FRONTEND_ORIGINS = [
+  process.env.FRONTEND_URL,
+  "http://localhost:5173",
+  "https://graduate-management-frontend.vercel.app"
+];
+
 const app = express();
+
+// Enhanced CORS configuration
+app.use(cors({
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (FRONTEND_ORIGINS.indexOf(origin) === -1) {
+      var msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+  credentials: true,
+  optionsSuccessStatus: 200 // For legacy browser support
+}));
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["https://graduate-management-h8jv.vercel.app", "http://localhost:5173"],
+    origin: FRONTEND_ORIGINS,
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   }
 });
 
-// Middleware
-app.use(cors({
-  origin: ["https://graduate-management-h8jv.vercel.app", "http://localhost:5173"],
-  credentials: true
-}));
 app.use(express.json());
 
 // Socket.io connection
