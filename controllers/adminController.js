@@ -36,6 +36,22 @@ const createAnnouncement = async (req, res, next) => {
   }
 };
 
+// @desc    Delete an announcement
+// @route   DELETE /api/admin/announcements/:id
+// @access  Private (Management)
+const deleteAnnouncement = async (req, res, next) => {
+  try {
+    const announcement = await Announcement.findById(req.params.id);
+    if (!announcement) {
+      return res.status(404).json({ message: 'Announcement not found' });
+    }
+    await announcement.deleteOne();
+    res.json({ message: 'Announcement removed' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Get all users for admin management
 // @route   GET /api/admin/users
 // @access  Private (Management)
@@ -123,6 +139,7 @@ const updateUser = async (req, res, next) => {
 module.exports = {
   getAnnouncements,
   createAnnouncement,
+  deleteAnnouncement,
   getAllUsers,
   createUser,
   updateUser
